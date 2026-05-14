@@ -1,3 +1,21 @@
+"""
+CSP_analysis.py
+===============
+Comprehensive analysis of the CSP solver across all hotels, days, budgets,
+and heuristic configurations.
+
+Visualisations produced  (saved to  CSP-test-results/)
+-------------------------------------------------------
+  Test A  — All hotels × all days  (fixed 8 h budget)
+    1. avg_score_by_day.png              average score per day (across all hotels)
+    2. avg_runtime_by_day.png            average runtime per day
+
+  Test C  — Heuristic comparison  (hotel[0], Friday, 8 h)
+    7. heuristic_comparison.png          FC/MAC × MRV/none × LCV/none
+
+    4. landmark_frequency.png            most recommended landmarks globally
+"""
+
 from __future__ import annotations
 
 import os
@@ -13,14 +31,18 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sns
 
-TESTS_DIR    = os.path.dirname(os.path.abspath(__file__))   
-project_root = os.path.dirname(TESTS_DIR)                   
+# ── paths ─────────────────────────────────────────────────────────────────────
+# Script location : <project_root>/Tests/csp_test.py
+# project_root    : two dirname() calls up from __file__
+TESTS_DIR    = os.path.dirname(os.path.abspath(__file__))   # …/Tests/
+project_root = os.path.dirname(TESTS_DIR)                   # …/<project_root>/
 sys.path.append(project_root)
 
 from Algorithms.CSP_Solver import TravelCSP
 from core.Problem_LocalSearch import TravelProblem_LocalSearch
 from utils import data_loader
 
+# Output → Tests/CSP-test-results/  (same level as GA-test-results, SA-test-results …)
 OUT = os.path.join(TESTS_DIR, "CSP-test-results")
 os.makedirs(OUT, exist_ok=True)
 
@@ -33,6 +55,9 @@ def savefig(name: str):
 sns.set_theme(style="whitegrid", font_scale=1.05)
 PALETTE = sns.color_palette("tab10")
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA
+# ─────────────────────────────────────────────────────────────────────────────
 print("Loading data …")
 landmarks   = data_loader.get_landmarks()
 hotels      = data_loader.get_hotels()
@@ -44,6 +69,7 @@ for lm in landmarks:
         if day not in lm.opening_hours:
             lm.opening_hours[day] = [0] * 24
             
+# Detect valid day keys directly from the landmark data
 _sample_lm   = next(iter(landmarks))
 DAYS         = sorted(_sample_lm.opening_hours.keys())
 DAY_LABELS   = [d.capitalize() for d in DAYS]
@@ -81,6 +107,9 @@ def run_csp(problem, inference="fc", var_h="mrv", val_h="lcv",
     }
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  TEST A  —  All hotels × all days
+# ══════════════════════════════════════════════════════════════════════════════
 print("\n── Test A: All hotels × all days ──")
 
 n_h, n_d    = len(hotels), len(DAYS)
@@ -112,11 +141,13 @@ for i, hotel in enumerate(hotels):
         except Exception as e:
             print(f"ERROR: {e}")
 
+    # Clear memory after each hotel
     gc.collect()
 
 print("\n  Computing averages across all hotels for each day...\n")
 
-avg_scores = score_mx.mean(axis=0)  
+# ── 1. Average Score by Day ───────────────────────────────────────────────────
+avg_scores = score_mx.mean(axis=0)  # Average across hotels for each day
 std_scores = score_mx.std(axis=0)
 
 fig, ax = plt.subplots(figsize=(10, 5))
@@ -132,13 +163,14 @@ ax.set_title("CSP — Average Score by Day  |  ±1 std dev across hotels  (8 h, 
 ax.grid(axis='y', alpha=0.3)
 plt.tight_layout(); savefig("1_avg_score_by_day.png")
 
-
+# Print day averages
 print("\n  Average Interest Score by Day:")
 for day, avg, std in zip(DAY_LABELS, avg_scores, std_scores):
     print(f"    {day:5s} : {avg:.1f} ± {std:.1f}")
 
 
-avg_runtimes = runtime_mx.mean(axis=0)  
+# ── 2. Average Runtime by Day ─────────────────────────────────────────────────
+avg_runtimes = runtime_mx.mean(axis=0)  # Average across hotels for each day
 std_runtimes = runtime_mx.std(axis=0)
 
 fig, ax = plt.subplots(figsize=(10, 5))
@@ -159,6 +191,7 @@ for day, avg, std in zip(DAY_LABELS, avg_runtimes, std_runtimes):
     print(f"    {day:5s} : {avg:.3f}s ± {std:.3f}s")
 
 
+# ── 4. Landmark frequency ─────────────────────────────────────────────────────
 top_n  = min(20, len(landmark_counter))
 top_lm = landmark_counter.most_common(top_n)
 names, counts = zip(*top_lm)
@@ -174,6 +207,10 @@ ax.set_title(f"CSP — Top {top_n} Most Recommended Landmarks  (all hotels × al
 ax.set_xlim(0, max(counts) * 1.15)
 plt.tight_layout(); savefig("4_landmark_frequency.png")
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TEST C  —  Heuristic comparison  (hotel[0], Friday, 8 h)
+# ══════════════════════════════════════════════════════════════════════════════
 print("\n── Test C: Heuristic comparison ──")
 
 combos = list(itertools.product(["fc", "mac"], ["mrv", "none"], ["lcv", "none"]))

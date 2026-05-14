@@ -1,3 +1,71 @@
+"""
+CSP_Solver.py  —  Pure Norvig AIMA Ch.6 CSP for the tourist-routing problem
+=============================================================================
+
+Algorithms implemented (figures / pages from Russell & Norvig, 4th ed.):
+
+    AC-3                          Fig 6.3  /  p.170
+    BACKTRACKING-SEARCH           Fig 6.5  /  p.173
+      SELECT-UNASSIGNED-VARIABLE
+          MRV  (Minimum Remaining Values)       p.174
+          Degree heuristic  (tie-break)         p.174
+      ORDER-DOMAIN-VALUES
+          LCV  (Least Constraining Value)       p.175
+      INFERENCE
+          FORWARD-CHECKING                      p.173
+          MAC  (Maintaining Arc Consistency)    p.177
+
+No branch-and-bound, no optimisation extensions — pure Ch.6 CSP.
+
+Problem modelling
+-----------------
+  Variables : ordered slots  [0, 1, …, n-1]   n = |candidates|
+              Slot i is the i-th position in the itinerary.
+
+  Domains   : D(slot_i) = {lm_0, …, lm_{n-1}, SKIP}
+              SKIP means "nothing is visited at this position".
+
+  Binary constraints
+    C1 – AllDifferent : ∀ i≠j,  non-SKIP values in different slots must differ.
+    C2 – SKIP-last    : ∀ i,    slot_i=SKIP  ⟹  slot_{i+1}=SKIP
+                        (symmetry-breaking: all unused slots are contiguous
+                        at the tail, so [A,B,SKIP,SKIP] and [A,SKIP,B,SKIP]
+                        are not both explored).
+
+  Temporal feasibility (C3 + C4, enforced inside the INFERENCE step):
+    When var=slot_i is assigned a non-SKIP landmark L, the inference
+    routine prunes from D(slot_{i+1}) every value that is inconsistent
+    with the time-window (C3) or total-budget (C4) constraint.
+    This folds the problem-specific constraints into standard FC / MAC
+    domain reduction without touching the core backtracking algorithm.
+
+  Type-quota cardinality constraint (C5, optional):
+    The end-user may specify a minimum count per landmark type, e.g.
+        type_quota = {"mall": 2, "cultural": 3, "historical": 1}
+    meaning the final itinerary must include AT LEAST that many landmarks
+    of each specified type.
+
+    C5 is a global constraint (not binary), handled in two places:
+      • _quota_feasible(assignment) — called inside every INFERENCE step.
+        After assigning a slot, it checks whether the remaining unassigned
+        slots still have enough landmarks of each required type in their
+        live domains to satisfy the quota.  If not, the inference fails
+        immediately (no need to explore further).
+      • _quota_satisfied(assignment) — called when the assignment is
+        complete.  Acts as the goal test; returns False if the quota is
+        not met, causing backtracking to continue searching.
+
+Note on completeness vs. quality
+---------------------------------
+Backtracking-Search is a *satisfaction* algorithm: it returns the first
+complete assignment consistent with all constraints, or failure.
+Because this is actually an optimisation problem (maximise Σ score),
+the quality of the solution depends entirely on search order — which
+is where MRV and LCV earn their keep.  The heuristics are tuned to
+explore high-score assignments first so the first solution found tends
+to be near-optimal, but there is no guarantee of global optimality.
+"""
+
 from __future__ import annotations
 
 import sys
@@ -11,12 +79,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from core.Node_Classes import Landmark, Hotel
 from core.Problem_LocalSearch import TravelProblem_LocalSearch
 
+# ── sentinel ──────────────────────────────────────────────────────────────────
 SKIP = "__SKIP__"
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  Generic CSP base class
+# ═════════════════════════════════════════════════════════════════════════════
+
 class CSP:
     """
-    Abstract CSP.
+    Abstract CSP following Norvig AIMA.
 
     Subclasses set:
         self.variables  : list of variable names
@@ -31,11 +104,13 @@ class CSP:
         self.domains:      Dict[Any, List] = {}
         self.neighbors:    Dict[Any, List] = {}
         self.nassigns:     int             = 0
-        self.curr_domains: Optional[Dict]  = None   
-        
+        self.curr_domains: Optional[Dict]  = None   # set by support_pruning()
+
+    # ── must override ──────────────────────────────────────────────────────
     def constraint(self, Xi, vi, Xj, vj) -> bool:
         raise NotImplementedError
 
+    # ── assignment helpers ─────────────────────────────────────────────────
     def assign(self, var, val, assignment: dict):
         assignment[var] = val
         self.nassigns += 1
@@ -51,6 +126,7 @@ class CSP:
             and not self.constraint(var, val, nb, assignment[nb])
         )
 
+    # ── domain-pruning helpers ─────────────────────────────────────────────
     def support_pruning(self):
         """Copy domains into curr_domains on first call."""
         if self.curr_domains is None:
@@ -83,12 +159,15 @@ class CSP:
             self.curr_domains[var].append(val)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  AC-3   (Norvig Fig 6.3 / p.170)
+# ═════════════════════════════════════════════════════════════════════════════
 
 def AC3(csp: CSP,
         queue:    Optional[deque] = None,
         removals: Optional[List]  = None) -> bool:
     """
-    AC-3 arc-consistency algorithm.
+    AC-3 arc-consistency algorithm  (Norvig Fig 6.3).
 
     Enforces arc consistency across all (Xi, Xj) arcs.
     Returns False when an inconsistency is detected (empty domain).
@@ -106,9 +185,9 @@ def AC3(csp: CSP,
     while queue:
         Xi, Xj = queue.popleft()
         if _revise(csp, Xi, Xj, removals):
-            if not csp.curr_domains[Xi]:        
+            if not csp.curr_domains[Xi]:        # empty domain → failure
                 return False
-            for Xk in csp.neighbors[Xi]:        
+            for Xk in csp.neighbors[Xi]:        # re-examine arcs into Xi
                 if Xk != Xj:
                     queue.append((Xk, Xi))
     return True
@@ -127,11 +206,14 @@ def _revise(csp: CSP, Xi, Xj, removals) -> bool:
     return revised
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  INFERENCE — Forward Checking  (Norvig p.173)
+# ═════════════════════════════════════════════════════════════════════════════
 
 def forward_checking(csp: CSP, var, value,
                      assignment: dict, removals: List) -> bool:
     """
-    FORWARD-CHECKING .
+    FORWARD-CHECKING  (Norvig p.173).
 
     After var=value is assigned, remove from each unassigned neighbour's
     domain every value inconsistent with this assignment.
@@ -147,10 +229,15 @@ def forward_checking(csp: CSP, var, value,
                 return False
     return True
 
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  INFERENCE — MAC  (Norvig p.177)
+# ═════════════════════════════════════════════════════════════════════════════
+
 def mac(csp: CSP, var, value,
         assignment: dict, removals: List) -> bool:
     """
-    MAC — Maintaining Arc Consistency.
+    MAC — Maintaining Arc Consistency  (Norvig p.177).
 
     Seeds AC-3 with  { (Xj, var) : Xj is an unassigned neighbour of var }.
     Returns False if an inconsistency is detected.
@@ -161,6 +248,11 @@ def mac(csp: CSP, var, value,
         if Xj not in assignment
     )
     return AC3(csp, queue=queue, removals=removals)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  SELECT-UNASSIGNED-VARIABLE  (Norvig p.174)
+# ═════════════════════════════════════════════════════════════════════════════
 
 def mrv(csp: CSP, assignment: dict):
     """
@@ -186,9 +278,13 @@ def first_unassigned(csp: CSP, assignment: dict):
             return v
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  ORDER-DOMAIN-VALUES — LCV  (Norvig p.175)
+# ═════════════════════════════════════════════════════════════════════════════
+
 def lcv(csp: CSP, var, assignment: dict) -> List:
     """
-    LCV — Least Constraining Value.
+    LCV — Least Constraining Value  (Norvig p.175).
     Order values so the one that rules out the fewest choices for
     neighbouring variables comes first.
     """
@@ -203,6 +299,10 @@ def identity_order(csp: CSP, var, assignment: dict) -> List:
     return csp.choices(var)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  BACKTRACKING-SEARCH  (Norvig Fig 6.5 / p.173)
+# ═════════════════════════════════════════════════════════════════════════════
+
 def backtracking_search(
     csp:                        CSP,
     select_unassigned_variable  = mrv,
@@ -211,7 +311,7 @@ def backtracking_search(
     goal_test                   = None,
 ) -> Optional[dict]:
     """
-    BACKTRACKING-SEARCH 
+    BACKTRACKING-SEARCH  (Norvig Fig 6.5).
 
     Returns the first complete consistent assignment that passes goal_test,
     or None.
@@ -245,7 +345,7 @@ def backtracking_search(
         if len(assignment) == len(csp.variables):
             if goal_test is None or goal_test(assignment):
                 return dict(assignment)
-            return None   
+            return None   # quota not met — backtrack
 
         var = select_unassigned_variable(csp, assignment)
 
@@ -257,23 +357,27 @@ def backtracking_search(
                 if inference(csp, var, value, assignment, removals):
                     result = backtrack(assignment)
                     if result is not None:
-                        return result              
+                        return result               # propagate solution up
 
                 csp.restore(removals)
                 csp.unassign(var, assignment)
 
-        return None                                 
+        return None                                 # failure
 
     csp.nassigns   = 0
-    csp.curr_domains = None  
+    csp.curr_domains = None   # fresh copy for pruning
 
+    # Run AC-3 once before search to tighten domains
     csp.support_pruning()
     if not AC3(csp):
-        return None            
+        return None            # problem is already inconsistent
 
     return backtrack({})
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  Travel-specific CSP
+# ═════════════════════════════════════════════════════════════════════════════
 
 class TravelCSP(CSP):
     """
@@ -287,7 +391,6 @@ class TravelCSP(CSP):
     Temporal constraints enforced inside inference (domain reduction):
         C3 – Time windows  landmark must be open at computed arrival time
         C4 – Budget        visit + return ≤ T_max
-        C5 - Quota time
     """
 
     def __init__(
@@ -323,6 +426,7 @@ class TravelCSP(CSP):
         self.time_limit_s     = time_limit_s
         self.type_quota: Dict[str, int] = type_quota or {}
 
+        # C0: static domain reduction — type filter
         if problem.type_filter:
             self.candidates: List[Landmark] = [
                 lm for lm in problem.landmarks
@@ -331,8 +435,12 @@ class TravelCSP(CSP):
         else:
             self.candidates = list(problem.landmarks)
 
+        # Sort high-score first so that MRV + LCV favour good solutions early
         self.candidates.sort(key=lambda lm: lm.interest_score, reverse=True)
 
+        # ── C5 upfront validation ──────────────────────────────────────
+        # Count available candidates per required type; raise early if
+        # the quota can never be satisfied regardless of constraints.
         if self.type_quota:
             available_by_type: Dict[str, int] = {}
             for lm in self.candidates:
@@ -348,22 +456,31 @@ class TravelCSP(CSP):
                         f"{available} candidate(s) exist."
                     )
 
+        # Sort high-score first so that MRV + LCV favour good solutions early
         self.candidates.sort(key=lambda lm: lm.interest_score, reverse=True)
 
         n = len(self.candidates)
         self.variables = list(range(n))
 
+        # Full initial domains
         self.domains = {i: self.candidates + [SKIP] for i in self.variables}
 
+        # Every pair shares C1 (AllDifferent);
+        # consecutive pairs additionally share C2 (SKIP-last).
+        # All-pairs ⊇ consecutive-pairs, so one dict is enough.
         self.neighbors = {
             i: [j for j in self.variables if j != i]
             for i in self.variables
         }
 
+        # Internal stats — initialised here so they exist even before solve()
         self._solution:  Optional[dict] = None
         self._timed_out: bool           = False
         self.nassigns:   int            = 0
 
+    # ──────────────────────────────────────────────────────────────────
+    #  Binary constraint  (C1 + C2)
+    # ──────────────────────────────────────────────────────────────────
 
     def constraint(self, Xi: int, vi, Xj: int, vj) -> bool:
         """
@@ -371,9 +488,11 @@ class TravelCSP(CSP):
         C2 – SKIP-last   : if the earlier of Xi/Xj is SKIP, the later must
                            also be SKIP (consecutive slots only).
         """
+        # C1
         if vi is not SKIP and vj is not SKIP and vi == vj:
             return False
 
+        # C2 (consecutive slots only)
         if abs(Xi - Xj) == 1:
             earlier_val = vi if Xi < Xj else vj
             later_val   = vj if Xi < Xj else vi
@@ -382,6 +501,83 @@ class TravelCSP(CSP):
 
         return True
 
+    # ──────────────────────────────────────────────────────────────────
+    #  Temporal feasibility helpers (for C3 + C4 domain reduction)
+    # ──────────────────────────────────────────────────────────────────
+
+    # def _reconstruct_time(self, up_to_slot: int, assignment: dict) -> float:
+    #     """
+    #     Simulate the trip from hotel departure up to (not including) slot
+    #     `up_to_slot`.  Returns current clock time in minutes since midnight.
+    #     """
+    #     current_time = self.problem.trip_start_time * 60.0
+    #     prev_lm: Optional[Landmark] = None
+
+    #     for s in range(up_to_slot):
+    #         if s not in assignment or assignment[s] is SKIP:
+    #             continue
+    #         lm = assignment[s]
+    #         src    = self.problem.hotel.id if prev_lm is None else prev_lm.name
+    #         travel = self.problem.time_matrix[src][lm.name]
+    #         arrival = current_time + travel
+
+    #         # Wait for opening if the landmark is closed at arrival
+    #         if not lm.is_open(self.problem.Travel_day, arrival % 1440):
+    #             opening = lm.opening_hours[self.problem.Travel_day]
+    #             if opening:
+    #                 hour = int(arrival // 60) + 1
+    #                 while hour < 24:
+    #                     if opening[hour % 24] == 1:
+    #                         arrival = float(hour * 60)
+    #                         break
+    #                     hour += 1
+
+    #         current_time = arrival + lm.visit_duration
+    #         prev_lm = lm
+
+    #     return current_time
+
+    # def _is_temporally_feasible(
+    #     self, slot: int, landmark: Landmark, assignment: dict
+    # ) -> bool:
+    #     """
+    #     C3 + C4: returns True iff placing `landmark` at `slot` is consistent
+    #     with the time-window and budget constraints given the assignment prefix.
+    #     """
+    #     current_time = self._reconstruct_time(slot, assignment)
+
+    #     # Find the last non-SKIP landmark before this slot
+    #     prev_lm: Optional[Landmark] = None
+    #     for s in range(slot - 1, -1, -1):
+    #         if s in assignment and assignment[s] is not SKIP:
+    #             prev_lm = assignment[s]
+    #             break
+
+    #     src    = self.problem.hotel.id if prev_lm is None else prev_lm.name
+    #     travel = self.problem.time_matrix[src][landmark.name]
+    #     arrival = current_time + travel
+
+    #     # C3 – time window: try waiting if closed
+    #     if not landmark.is_open(self.problem.Travel_day, arrival % 1440):
+    #         opening = landmark.opening_hours[self.problem.Travel_day]
+    #         if opening is None:
+    #             return False
+    #         hour = int(arrival // 60) + 1
+    #         opened = False
+    #         while hour < 24:
+    #             if opening[hour % 24] == 1:
+    #                 arrival = float(hour * 60)
+    #                 opened  = True
+    #                 break
+    #             hour += 1
+    #         if not opened:
+    #             return False
+
+    #     # C4 – budget
+    #     ret     = self.problem.time_matrix[landmark.name][self.problem.hotel.id]
+    #     finish  = arrival + landmark.visit_duration + ret
+    #     elapsed = (finish / 60.0) - self.problem.trip_start_time
+    #     return elapsed <= self.problem.max_travel_time
     def _reconstruct_time(self, up_to_slot: int, assignment: dict) -> float:
         current_time = self.problem.trip_start_time * 60.0
         prev_lm: Optional[Landmark] = None
@@ -435,7 +631,7 @@ class TravelCSP(CSP):
         try:
             is_open = landmark.is_open(self.problem.Travel_day, arrival % 1440)
         except KeyError:
-            return False   
+            return False   # day key missing → treat as closed
 
         if not is_open:
             opening = landmark.opening_hours.get(self.problem.Travel_day)
@@ -472,6 +668,9 @@ class TravelCSP(CSP):
                 self.prune(slot, lm, removals)
         return bool(self.curr_domains[slot])
 
+    # ──────────────────────────────────────────────────────────────────
+    #  C5 — Type-quota constraint helpers
+    # ──────────────────────────────────────────────────────────────────
 
     def _quota_feasible(self, assignment: dict) -> bool:
         """
@@ -492,6 +691,7 @@ class TravelCSP(CSP):
         if not self.type_quota:
             return True
 
+        # Count what is already committed
         assigned_counts: Dict[str, int] = {}
         for lm in assignment.values():
             if lm is not SKIP:
@@ -499,6 +699,7 @@ class TravelCSP(CSP):
                     assigned_counts.get(lm.landmark_type, 0) + 1
                 )
 
+        # Count what is still reachable in live domains of unassigned slots
         possible_by_type: Dict[str, set] = {}
         for slot in self.variables:
             if slot in assignment:
@@ -510,7 +711,7 @@ class TravelCSP(CSP):
                     possible_by_type[lm.landmark_type] = set()
                 possible_by_type[lm.landmark_type].add(lm.id)
 
-
+        # Check every required type
         for lm_type, required in self.type_quota.items():
             have     = assigned_counts.get(lm_type, 0)
             possible = len(possible_by_type.get(lm_type, set()))
@@ -541,6 +742,10 @@ class TravelCSP(CSP):
             for lm_type, required in self.type_quota.items()
         )
 
+    # ──────────────────────────────────────────────────────────────────
+    #  Inference wrappers  (C1/C2 via FC/MAC + C3/C4 via temporal + C5)
+    # ──────────────────────────────────────────────────────────────────
+
     def _inference_fc(self, csp: "TravelCSP", var: int, value,
                       assignment: dict, removals: List) -> bool:
         """
@@ -553,6 +758,7 @@ class TravelCSP(CSP):
         if next_slot in csp.variables and next_slot not in assignment:
             if not csp._prune_temporal(next_slot, assignment, removals):
                 return False
+        # C5: can the remaining live domains still satisfy the quota?
         if not csp._quota_feasible(assignment):
             return False
         return True
@@ -572,6 +778,10 @@ class TravelCSP(CSP):
         if not csp._quota_feasible(assignment):
             return False
         return True
+
+    # ──────────────────────────────────────────────────────────────────
+    #  Public interface
+    # ──────────────────────────────────────────────────────────────────
 
     def solve(self) -> List[Landmark]:
         """Run BACKTRACKING-SEARCH and return the itinerary found."""
@@ -628,48 +838,78 @@ class TravelCSP(CSP):
         return total / 60.0
 
 
-# # dummy test
+# ═════════════════════════════════════════════════════════════════════════════
+#  Smoke test
+# ═════════════════════════════════════════════════════════════════════════════
+
     
-# if __name__ == "__main__":
-#     from utils.data_loader import get_landmarks, get_hotels, get_time_matrix
+if __name__ == "__main__":
+    from utils.data_loader import get_landmarks, get_hotels, get_time_matrix
 
-#     landmarks   = get_landmarks()
-#     hotels      = get_hotels()
-#     time_matrix = get_time_matrix()
+    landmarks   = get_landmarks()
+    hotels      = get_hotels()
+    time_matrix = get_time_matrix()
 
-#     travel_info = {
-#         "hotel"          : hotels[0],
-#         "Travel_day"     : "fri",
-#         "Travel_Time"    : 8,
-#         "type_filter"    : None,
-#         "time_matrix"    : time_matrix,
-#         "trip_start_time": 8,
-#     }
+    travel_info = {
+        "hotel"          : hotels[0],
+        "Travel_day"     : "fri",
+        "Travel_Time"    : 8,
+        "type_filter"    : None,
+        "time_matrix"    : time_matrix,
+        "trip_start_time": 8,
+    }
 
-#     problem = TravelProblem_LocalSearch(landmarks, travel_info)
+    problem = TravelProblem_LocalSearch(landmarks, travel_info)
 
-#     # ── without quota (original behaviour) ───────────────────────────
-#     print("=== No quota ===")
-#     solver   = TravelCSP(problem, inference_method="fc",
-#                          var_heuristic="mrv", val_heuristic="lcv")
-#     solution = solver.solve()
-#     for i, lm in enumerate(solution, 1):
-#         print(f"  {i:2}. [{lm.landmark_type:12s}] {lm.name}  score={lm.interest_score}")
+    # # ── without quota (original behaviour) ───────────────────────────
+    # print("=== No quota ===")
+    # solver   = TravelCSP(problem, inference_method="fc",
+    #                      var_heuristic="mrv", val_heuristic="lcv")
+    # solution = solver.solve()
+    # for i, lm in enumerate(solution, 1):
+    #     print(f"  {i:2}. [{lm.landmark_type:12s}] {lm.name}  score={lm.interest_score}")
 
-#     # ── with type quota ───────────────────────────────────────────────
-#     print("\n=== With type_quota ===")
-#     quota = {"Historical Site": 1, "Nature": 1, "Monument": 1,"Museum":2}
-#     try:
-#         solver_q = TravelCSP(problem, inference_method="fc",
-#                              var_heuristic="mrv", val_heuristic="lcv",
-#                              type_quota=quota)
-#         solution_q = solver_q.solve()
-#         if not solution_q:
-#             print("  No solution found satisfying the quota.")
-#         else:
-#             for i, lm in enumerate(solution_q, 1):
-#                 print(f"  {i:2}. [{lm.landmark_type:12s}] {lm.name}  score={lm.interest_score}")
-#             s = solver_q.stats()
-#             print(f"  total score={s['total_score']}  assigns={s['assignments_made']}")
-#     except ValueError as e:
-#         print(f"  Configuration error: {e}")
+    # # ── with type quota ───────────────────────────────────────────────
+    # print("\n=== With type_quota ===")
+    # quota = {"Historical Site": 1, "Nature": 1, "Monument": 1,"Museum":2}
+    # try:
+    #     solver_q = TravelCSP(problem, inference_method="fc",
+    #                          var_heuristic="mrv", val_heuristic="lcv",
+    #                          type_quota=quota)
+    #     solution_q = solver_q.solve()
+    #     if not solution_q:
+    #         print("  No solution found satisfying the quota.")
+    #     else:
+    #         for i, lm in enumerate(solution_q, 1):
+    #             print(f"  {i:2}. [{lm.landmark_type:12s}] {lm.name}  score={lm.interest_score}")
+    #         s = solver_q.stats()
+    #         print(f"  total score={s['total_score']}  assigns={s['assignments_made']}")
+    # except ValueError as e:
+    #     print(f"  Configuration error: {e}")
+    from Algorithms.CSP_Solver import TravelCSP
+    from core.Problem_LocalSearch import TravelProblem_LocalSearch
+    from core.Node_Classes import Landmark, Hotel
+
+    def calculate_unified_score(path, time_matrix):
+        if not path: 
+            return 0
+        total_rating = sum(node.interest_score for node in path if isinstance(node, Landmark))
+        total_travel_time = sum(time_matrix[path[i].name][path[i+1].name] for i in range(len(path) - 1))
+        return (7 * total_rating) - total_travel_time
+
+
+  
+    solver   = TravelCSP(problem, inference_method="fc",
+                         var_heuristic="mrv", val_heuristic="lcv")
+    solution = solver.solve()
+    # Evaluate
+    if solution:
+        full_path = [problem.hotel] +solution+ [problem.hotel]
+        score = calculate_unified_score(full_path, problem.time_matrix)
+        
+        print(f"Itinerary: {[lm.name for lm in solution]}")
+        print(f"Total rating sum: {sum(lm.interest_score for lm in solution)}")
+        print(f"Unified Score: {score:.2f}")
+        print(f"Backtracking assignments: {solver.nassigns}")
+    else:
+        print("No valid itinerary found")
