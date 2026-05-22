@@ -42,10 +42,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+#we should set origins here :
+origins = [
+    "https://intro-to-ai-travel-project-2.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "https://intro-to-ai-travel-project.vercel.app"
+]
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
