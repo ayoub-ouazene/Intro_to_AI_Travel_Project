@@ -13,9 +13,17 @@ from app.database.database import get_db
 from app.database.models import Itinerary, ItineraryLandmark, Landmark
 from app.utils.auth import decode_access_token
 from app.database.models import User
+import unicodedata, re
+
 
 router = APIRouter(prefix="/api", tags=["solver"])
 
+
+import re
+import unicodedata
+
+def clean(name: str) -> str:
+    return name 
 
 @router.get("/hotels")
 async def get_hotels_endpoint():
@@ -23,10 +31,14 @@ async def get_hotels_endpoint():
     try:
         from ai_integration.core.data_loader import get_hotels
         hotels = get_hotels()
+        for h in hotels:
+      
+            h.name = clean(h.name)
+         
         return [
             {
                 "id": f"hotel-{h.name}",
-                "name": h.name,
+                "name": clean(h.name),
                 "latitude": h.lat,
                 "longitude": h.lon,
                 "type": "Hotel",

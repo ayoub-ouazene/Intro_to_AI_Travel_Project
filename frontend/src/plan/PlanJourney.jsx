@@ -111,6 +111,7 @@ export default function PlanJourney() {
     }
 
     const payload = {
+
       Hotel_Name: hotel.name,
       Travel_day: dayOfWeekName,
       Travel_Time: Number(budget),
@@ -151,7 +152,7 @@ export default function PlanJourney() {
       });
     } catch (err) {
       console.error(err);
-      alert(`Error generating itinerary: ${err.message}`);
+   
     } finally {
       setIsGenerating(false);
     }

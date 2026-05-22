@@ -123,3 +123,4 @@ def clear_cache():
     _landmarks_cache = None
     _hotels_cache = None
     _time_matrix_cache = None
+

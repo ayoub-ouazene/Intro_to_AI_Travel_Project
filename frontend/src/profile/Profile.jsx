@@ -678,11 +678,11 @@ export default function Profile() {
       if (res.ok) {
         setDbItineraries(prev => prev.filter(it => it.itinerary_id !== id));
       } else {
-        alert("Failed to delete itinerary.");
+        console.err("Failed to delete itinerary.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting itinerary.");
+   
     }
   };
 

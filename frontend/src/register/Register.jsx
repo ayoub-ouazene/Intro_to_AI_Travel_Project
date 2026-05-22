@@ -67,7 +67,6 @@ export default function Register() {
         localStorage.setItem("userEmail", email);
       }
 
-      alert("🎉 Account created successfully! Welcome to Algiers AI.");
       navigate("/plan");
     } catch (err) {
       setError(err.message || "Something went wrong.");
