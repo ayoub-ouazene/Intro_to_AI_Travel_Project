@@ -1,14 +1,15 @@
-# 🌍 AI-Powered Travel Itinerary Optimization
+# AI-Powered Travel Itinerary Optimization
 
 An intelligent travel planning application that uses artificial intelligence and optimization algorithms to create personalized travel itineraries. The system analyzes landmarks, hotels, travel times, and user preferences to generate optimal routes that maximize tourist experiences while respecting time and budget constraints.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
 - [Technology Stack](#technology-stack)
+- [Live Demo](#live-demo)
 - [Project Structure](#project-structure)
 - [Installation & Setup](#installation--setup)
 - [Usage](#usage)
@@ -21,119 +22,128 @@ An intelligent travel planning application that uses artificial intelligence and
 
 ---
 
-## 🎯 Overview
+## Overview
 
-This project implements a comprehensive travel itinerary optimization system that combines **multiple AI algorithms** to solve complex travel planning problems. Users can specify their starting hotel, destination, trip duration, and interests, and the system generates optimized itineraries that:
+This project implements a comprehensive travel itinerary optimization system that combines multiple AI algorithms to solve complex travel planning problems. Users can specify their starting hotel, destination, trip duration, and interests, and the system generates optimized itineraries that:
 
-- ✅ Maximize tourist attraction satisfaction
-- ✅ Minimize total travel time
-- ✅ Respect landmark operating hours
-- ✅ Consider hotel constraints
-- ✅ Adapt to different optimization strategies
+- Maximize tourist attraction satisfaction
+- Minimize total travel time
+- Respect landmark operating hours
+- Consider hotel constraints
+- Adapt to different optimization strategies
 
-The application uses a **full-stack approach** with a Python FastAPI backend handling complex computations and a React frontend providing an intuitive user interface with interactive maps.
-
----
-
-## ✨ Features
-
-### 🤖 AI & Optimization
-- **7 Different Optimization Algorithms**: ACS, Genetic Algorithm, Simulated Annealing, Hill Climbing, Greedy Search, Artificial Bee Colony, and Constraint Satisfaction Problem (CSP)
-- **Hybrid Approaches**: Combines multiple algorithms (e.g., ACS with Simulated Annealing)
-- **Parameter Tuning**: Extensive testing and optimization of algorithm parameters
-- **Comparison Tools**: Analyzes performance differences between algorithms
-
-### 🗺️ Travel Planning
-- **Interactive Map Integration**: Leaflet-based map visualization with routing
-- **Landmark Management**: Comprehensive landmark database with ratings and opening hours
-- **Hotel Support**: Multiple hotel options with location data
-- **Travel Time Matrix**: Pre-computed travel times between locations
-- **Time Constraints**: Respects landmark opening hours and visit durations
-
-### 👤 User Management
-- **Authentication System**: User login and registration
-- **User Profiles**: Store and manage user preferences and itinerary history
-- **Personalized Recommendations**: Tailored results based on user interests
-
-### 💾 Data Management
-- **CSV-Based Datasets**: Hotels and landmarks data in structured CSV format
-- **GeoJSON Support**: Geographic data for advanced mapping features
-- **Dynamic Data Loading**: Efficient data management and preprocessing
+The application uses a full-stack approach with a Python FastAPI backend handling complex computations and a React frontend providing an intuitive user interface with interactive maps.
 
 ---
 
-## 🛠️ Technology Stack
+## Features
+
+### AI & Optimization
+- 7 Different Optimization Algorithms: ACS, Genetic Algorithm, Simulated Annealing, Hill Climbing, Greedy Search, Artificial Bee Colony, and Constraint Satisfaction Problem (CSP)
+- Hybrid Approaches: Combines multiple algorithms (e.g., ACS with Simulated Annealing)
+- Parameter Tuning: Extensive testing and optimization of algorithm parameters
+- Comparison Tools: Analyzes performance differences between algorithms
+
+### Travel Planning
+- Interactive Map Integration: Leaflet-based map visualization with routing
+- Landmark Management: Comprehensive landmark database with ratings and opening hours
+- Hotel Support: Multiple hotel options with location data
+- Travel Time Matrix: Pre-computed travel times between locations
+- Time Constraints: Respects landmark opening hours and visit durations
+
+### User Management
+- Authentication System: User login and registration
+- User Profiles: Store and manage user preferences and itinerary history
+- Personalized Recommendations: Tailored results based on user interests
+
+### Data Management
+- CSV-Based Datasets: Hotels and landmarks data in structured CSV format
+- GeoJSON Support: Geographic data for advanced mapping features
+- Dynamic Data Loading: Efficient data management and preprocessing
+
+---
+
+## Technology Stack
 
 ### Backend
+
 | Technology | Purpose |
 |-----------|---------|
-| **FastAPI** | Modern, fast web framework for building APIs |
-| **Python 3.x** | Core language for algorithm implementation |
-| **SQLAlchemy** | ORM for database operations |
-| **PostgreSQL** | Relational database with psycopg2 driver |
-| **Uvicorn** | ASGI server for running FastAPI |
-| **Pydantic** | Data validation and schema definition |
-| **Pandas & NumPy** | Data processing and numerical computations |
+| FastAPI | Modern, fast web framework for building APIs |
+| Python 3.x | Core language for algorithm implementation |
+| SQLAlchemy | ORM for database operations |
+| PostgreSQL | Relational database with psycopg2 driver |
+| Uvicorn | ASGI server for running FastAPI |
+| Pydantic | Data validation and schema definition |
+| Pandas & NumPy | Data processing and numerical computations |
 
 ### Frontend
+
 | Technology | Purpose |
 |-----------|---------|
-| **React 19** | UI framework |
-| **Vite** | Build tool and dev server |
-| **React Router DOM** | Client-side routing |
-| **Leaflet** | Interactive map library |
-| **Leaflet Routing Machine** | Route optimization and display |
-| **Material-UI (MUI)** | Component library |
-| **Tailwind CSS** | Utility-first CSS framework |
-| **Emotion** | CSS-in-JS styling |
+| React 19 | UI framework |
+| Vite | Build tool and dev server |
+| React Router DOM | Client-side routing |
+| Leaflet | Interactive map library |
+| Leaflet Routing Machine | Route optimization and display |
+| Material-UI (MUI) | Component library |
+| Tailwind CSS | Utility-first CSS framework |
+| Emotion | CSS-in-JS styling |
 
 ---
 
-## 📁 Project Structure
+## Live Demo
 
-```
+- Backend API: https://intro-to-ai-travel-project-2.onrender.com/
+- Frontend Application: https://intro-to-ai-travel-project.vercel.app/
+
+---
+
+## Project Structure
+
+```bash
 Intro_to_AI_Travel_Project/
 ├── Algorithms/                          # Optimization Algorithms
 │   ├── ACS.py                          # Ant Colony System
-│   ├── artificial_bee_colony.py         # ABC Algorithm
+│   ├── artificial_bee_colony.py        # ABC Algorithm
 │   ├── GA.py                           # Genetic Algorithm
 │   ├── Greedy.py                       # Greedy Search
 │   ├── hill_climbing.py                # Hill Climbing
-│   ├── Simulated_Anealing.py          # Simulated Annealing
+│   ├── Simulated_Anealing.py           # Simulated Annealing
 │   └── CSP_Solver.py                   # Constraint Satisfaction
 │
-├── backend/                             # FastAPI Backend
+├── backend/                            # FastAPI Backend
 │   ├── main.py                         # Application entry point
 │   ├── requirements.txt                # Python dependencies
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── solver.py                   # Core solving logic
 │   │   ├── routes/
-│   │   │   ├── solve.py               # Optimization endpoints
-│   │   │   ├── auth.py                # Authentication
-│   │   │   └── itinerary.py           # Itinerary management
+│   │   │   ├── solve.py                # Optimization endpoints
+│   │   │   ├── auth.py                 # Authentication
+│   │   │   └── itinerary.py            # Itinerary management
 │   │   ├── models/
-│   │   │   └── schemas.py             # Data schemas
+│   │   │   └── schemas.py              # Data schemas
 │   │   ├── database/
-│   │   │   └── database.py            # DB configuration
+│   │   │   └── database.py             # DB configuration
 │   │   └── utils/
-│   │       └── helpers.py             # Utility functions
+│   │       └── helpers.py              # Utility functions
 │   ├── ai_integration/
-│   │   ├── algorithms/                # Algorithm implementations
-│   │   └── core/                      # Core classes
+│   │   ├── algorithms/                 # Algorithm implementations
+│   │   └── core/                       # Core classes
 │   └── data/
 │       ├── hotels.csv
 │       ├── landmarks.csv
 │       └── time_matrix.json
 │
-├── core/                                # Core Problem Definitions
+├── core/                               # Core Problem Definitions
 │   ├── Node_Classes.py                 # Landmark & Hotel classes
-│   ├── Problem_AntColony.py           # ACS environment setup
-│   ├── Problem_InformedSearch.py      # Informed search problems
-│   ├── Problem_LocalSearch.py         # Local search problems
+│   ├── Problem_AntColony.py            # ACS environment setup
+│   ├── Problem_InformedSearch.py       # Informed search problems
+│   ├── Problem_LocalSearch.py          # Local search problems
 │   └── Solution.py                     # Solution representation
 │
-├── frontend/                            # React Vite Application
+├── frontend/                           # React Vite Application
 │   ├── package.json                    # Dependencies
 │   ├── vite.config.js                  # Vite configuration
 │   ├── tailwind.config.cjs             # Tailwind config
@@ -142,28 +152,28 @@ Intro_to_AI_Travel_Project/
 │   │   ├── App.jsx                     # Main app component
 │   │   ├── main.jsx                    # React entry point
 │   │   ├── components/
-│   │   │   ├── home/                  # Home page
-│   │   │   ├── plan/                  # Trip planning page
-│   │   │   ├── itinerary/             # Itinerary display
-│   │   │   ├── map/                   # Map component
-│   │   │   ├── navbar/                # Navigation
-│   │   │   ├── login/                 # Login page
-│   │   │   ├── register/              # Registration page
-│   │   │   ├── profile/               # User profile
-│   │   │   └── footer/                # Footer
+│   │   │   ├── home/                   # Home page
+│   │   │   ├── plan/                   # Trip planning page
+│   │   │   ├── itinerary/              # Itinerary display
+│   │   │   ├── map/                    # Map component
+│   │   │   ├── navbar/                 # Navigation
+│   │   │   ├── login/                  # Login page
+│   │   │   ├── register/               # Registration page
+│   │   │   ├── profile/                # User profile
+│   │   │   └── footer/                 # Footer
 │   │   └── styles/
 │   ├── public/
 │   │   ├── images/
 │   │   └── data/
 │   └── README.md
 │
-├── utils/                               # Utility Modules
+├── utils/                              # Utility Modules
 │   ├── data_loader.py                  # Data loading utilities
 │   ├── evaluation.py                   # Performance evaluation
 │   ├── time_matrix_generator.py        # Time matrix generation
 │   └── time_matrix files               # Pre-computed matrices
 │
-├── Tests/                               # Testing Suite
+├── Tests/                              # Testing Suite
 │   ├── ABC_test.py
 │   ├── ACS_Test.py
 │   ├── GA_test.py
@@ -173,30 +183,30 @@ Intro_to_AI_Travel_Project/
 │   ├── csp_test.py
 │   └── Results/                        # Test results & benchmarks
 │
-├── dataset/                             # Data Files
+├── dataset/                            # Data Files
 │   ├── hotels/
 │   │   └── Algiers_hotels.csv
 │   └── landmarks/
 │       └── Algiers_Landmarks.csv
 │
-├── scripts/                             # Data Processing Scripts
+├── scripts/                            # Data Processing Scripts
 │   ├── gemini_solution/
 │   ├── scraping method/
 │   ├── using overpass data/
 │   └── using scraped data/
 │
-├── notebook.ipynb                       # Jupyter Notebook for exploration
-└── README.md                            # This file
+├── notebook.ipynb                      # Jupyter Notebook for exploration
+└── README.md                           # This file
 ```
 
 ---
 
-## 💻 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
-- **Python 3.8+**
-- **Node.js 16+** and **npm**
-- **PostgreSQL 12+** (optional, for full database setup)
+- Python 3.8+
+- Node.js 16+ and npm
+- PostgreSQL 12+ (optional, for full database setup)
 
 ### Backend Setup
 
@@ -209,10 +219,10 @@ Intro_to_AI_Travel_Project/
 2. **Create Python virtual environment**
    ```bash
    python -m venv venv
-   
+
    # On Windows
    venv\Scripts\activate
-   
+
    # On macOS/Linux
    source venv/bin/activate
    ```
@@ -224,6 +234,7 @@ Intro_to_AI_Travel_Project/
    ```
 
 4. **Configure environment variables** (optional)
+
    Create a `.env` file in the backend directory:
    ```env
    DATABASE_URL=postgresql://user:password@localhost/travel_db
@@ -239,8 +250,9 @@ Intro_to_AI_Travel_Project/
    ```bash
    uvicorn main:app --reload
    ```
-   - API Documentation: http://localhost:8000/docs
-   - ReDoc Documentation: http://localhost:8000/redoc
+
+- API Documentation: http://localhost:8000/docs
+- ReDoc Documentation: http://localhost:8000/redoc
 
 ### Frontend Setup
 
@@ -258,7 +270,8 @@ Intro_to_AI_Travel_Project/
    ```bash
    npm run dev
    ```
-   - Access at: http://localhost:5173
+
+- Access at: http://localhost:5173
 
 4. **Build for production**
    ```bash
@@ -267,7 +280,7 @@ Intro_to_AI_Travel_Project/
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Basic Workflow
 
@@ -293,7 +306,6 @@ Intro_to_AI_Travel_Project/
 ### Example API Request
 
 ```bash
-# Start optimization (curl example)
 curl -X POST "http://localhost:8000/api/solve" \
   -H "Content-Type: application/json" \
   -d '{
@@ -306,9 +318,9 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 ---
 
-## 🧠 Optimization Algorithms
+## Optimization Algorithms
 
-### 1. **Ant Colony System (ACS)**
+### 1. Ant Colony System (ACS)
 - Inspired by ant pheromone behavior
 - Excellent for finding near-optimal solutions
 - Exploration vs exploitation balance
@@ -316,7 +328,7 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 **Parameters**: `alpha`, `beta`, `rho`, `q0`, `iterations`
 
-### 2. **Genetic Algorithm (GA)**
+### 2. Genetic Algorithm (GA)
 - Population-based evolutionary approach
 - Crossover and mutation operations
 - Good for diverse solution spaces
@@ -324,7 +336,7 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 **Parameters**: `population_size`, `generations`, `mutation_rate`, `crossover_rate`
 
-### 3. **Simulated Annealing (SA)**
+### 3. Simulated Annealing (SA)
 - Probabilistic optimization technique
 - Mimics metal annealing process
 - Escapes local optima through temperature control
@@ -332,26 +344,26 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 **Parameters**: `initial_temp`, `cooling_rate`, `min_temp`, `iterations`
 
-### 4. **Hill Climbing**
+### 4. Hill Climbing
 - Simple greedy local search
 - Fast but may stuck in local optima
 - Good starting point for hybrid approaches
 - Minimal parameters needed
 
-### 5. **Greedy Search**
+### 5. Greedy Search
 - Straightforward heuristic approach
 - Always selects best immediate choice
 - Fastest execution time
 - Provides baseline solutions
 
-### 6. **Artificial Bee Colony (ABC)**
+### 6. Artificial Bee Colony (ABC)
 - Swarm intelligence based on bee foraging
 - Employee, onlooker, and scout bees
 - Good exploration and exploitation balance
 
 **Parameters**: `colony_size`, `iterations`, `limit`
 
-### 7. **Constraint Satisfaction Problem (CSP)**
+### 7. Constraint Satisfaction Problem (CSP)
 - Constraint-based approach
 - Ensures all constraints are satisfied
 - Best for problems with hard constraints
@@ -359,7 +371,7 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Solve Routes (`/api/solve`)
 
@@ -392,63 +404,67 @@ curl -X POST "http://localhost:8000/api/solve" \
 
 ---
 
-## 🎨 Frontend Components
+## Frontend Components
 
 ### Pages
-- **Home** - Landing page with project overview
-- **Plan Journey** - Trip planning interface
-- **Itinerary** - Detailed itinerary view and management
-- **Map** - Interactive map with routes
-- **Login** - User authentication
-- **Register** - User registration
-- **Profile** - User account management
+- Home - Landing page with project overview
+- Plan Journey - Trip planning interface
+- Itinerary - Detailed itinerary view and management
+- Map - Interactive map with routes
+- Login - User authentication
+- Register - User registration
+- Profile - User account management
 
 ### Key Components
-- **Navbar** - Navigation bar
-- **Footer** - Footer section
-- **Map Component** - Leaflet integration with routing
-- **Time Plan Display** - Schedule visualization
-- **Landmark List** - Browsable landmark listings
+- Navbar - Navigation bar
+- Footer - Footer section
+- Map Component - Leaflet integration with routing
+- Time Plan Display - Schedule visualization
+- Landmark List - Browsable landmark listings
 
 ---
 
-## 📊 Data Structure
+## Data Structure
 
 ### Landmark Class
+
 ```python
 class Landmark:
-    id: int                          # Unique identifier
-    name: str                        # Landmark name
-    lon: float                       # Longitude
-    lat: float                       # Latitude
-    interest_score: float            # User interest rating
-    opening_hours: dict[str, list]   # Hours for each day
-    visit_duration: int              # Visit time in minutes
-    landmark_type: str               # Category (Museum, Park, etc.)
+    id: int
+    name: str
+    lon: float
+    lat: float
+    interest_score: float
+    opening_hours: dict[str, list]
+    visit_duration: int
+    landmark_type: str
 ```
 
 ### Hotel Class
+
 ```python
 class Hotel:
-    id: int                          # Unique identifier
-    name: str                        # Hotel name
-    lon: float                       # Longitude
-    lat: float                       # Latitude
-    opening_hours: dict[str, list]   # Operating hours
+    id: int
+    name: str
+    lon: float
+    lat: float
+    opening_hours: dict[str, list]
 ```
 
 ### Solution Representation
+
 ```python
 class Solution:
-    state: List[Landmark]            # Ordered list of landmarks
-    score: float                     # Solution quality score
-    
-# Score calculation: (7 * total_rating) - total_travel_time
+    state: List[Landmark]
+    score: float
+
+# Score calculation:
+# (7 * total_rating) - total_travel_time
 ```
 
 ---
 
-## ✅ Testing
+## Testing
 
 The project includes comprehensive test suite:
 
@@ -474,12 +490,12 @@ python -m pytest --cov=Algorithms Tests/
 
 ---
 
-## 🔍 Data Sources
+## Data Sources
 
 ### Datasets
-- **Hotels**: `dataset/hotels/Algiers_hotels.csv`
-- **Landmarks**: `dataset/landmarks/Algiers_Landmarks.csv`
-- **Geographic Data**: `scripts/using overpass data/landmarks.geojson`
+- Hotels: `dataset/hotels/Algiers_hotels.csv`
+- Landmarks: `dataset/landmarks/Algiers_Landmarks.csv`
+- Geographic Data: `scripts/using overpass data/landmarks.geojson`
 
 ### Data Processing
 - Landmark enrichment with web scraping
@@ -488,39 +504,44 @@ python -m pytest --cov=Algorithms Tests/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork the repository**
+
 2. **Create feature branch**
    ```bash
    git checkout -b feature/your-feature
    ```
+
 3. **Make changes and test**
    ```bash
    python -m pytest Tests/
    ```
+
 4. **Commit with descriptive messages**
    ```bash
    git commit -m "Add feature: description"
    ```
+
 5. **Push to branch**
    ```bash
    git push origin feature/your-feature
    ```
+
 6. **Open Pull Request**
 
 ---
 
-## 📝 File Naming Conventions
+## File Naming Conventions
 
-- **Algorithms**: `algorithm_name.py`
-- **Tests**: `algorithm_name_test.py`
-- **Results**: `algorithm_name_results/`
-- **Data Files**: Lowercase with underscores
+- Algorithms: `algorithm_name.py`
+- Tests: `algorithm_name_test.py`
+- Results: `algorithm_name_results/`
+- Data Files: Lowercase with underscores
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### Backend Configuration
 - Located in `backend/main.py`
@@ -534,7 +555,7 @@ python -m pytest --cov=Algorithms Tests/
 
 ---
 
-## 📞 Support & Contact
+## Support & Contact
 
 For issues, questions, or suggestions:
 1. Create an issue in the repository
@@ -543,22 +564,22 @@ For issues, questions, or suggestions:
 
 ---
 
-## 📄 License
+## License
 
 This project is part of an educational initiative for AI and optimization algorithms.
 
 ---
 
-## 🎓 Academic Reference
+## Academic Reference
 
 This project demonstrates practical applications of:
-- **Swarm Intelligence** (ACS, ABC)
-- **Evolutionary Algorithms** (GA)
-- **Local Search Methods** (Hill Climbing, SA)
-- **Heuristic Approaches** (Greedy)
-- **Constraint Programming** (CSP)
-- **Web Development** (Full-stack)
-- **Data Analysis** (Pandas, NumPy)
+- Swarm Intelligence (ACS, ABC)
+- Evolutionary Algorithms (GA)
+- Local Search Methods (Hill Climbing, SA)
+- Heuristic Approaches (Greedy)
+- Constraint Programming (CSP)
+- Web Development (Full-stack)
+- Data Analysis (Pandas, NumPy)
 
 ---
 
