@@ -31,10 +31,6 @@ async def get_hotels_endpoint():
     try:
         from ai_integration.core.data_loader import get_hotels
         hotels = get_hotels()
-        for h in hotels:
-      
-            h.name = clean(h.name)
-         
         return [
             {
                 "id": f"hotel-{h.name}",
@@ -240,6 +236,7 @@ async def solve_travel(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
 
 
 @router.get("/health")

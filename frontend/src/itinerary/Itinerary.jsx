@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaMap, FaClock } from "react-icons/fa";
 import MapComponent from "../map/MapComponent.jsx";
@@ -111,7 +111,7 @@ export default function Itinerary({
             }));
             setIsLatestFallback(true);
             // Latest path endpoint omits hotel; read it from the saved itinerary name
-            const listRes = await fetch("http://localhost:8000/api/itineraries", {
+            const listRes = await fetch("https://intro-to-ai-travel-project-2.onrender.com/api/itineraries", {
               headers: { "Authorization": `Bearer ${token}` },
             });
             if (listRes.ok) {
