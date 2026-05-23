@@ -95,7 +95,8 @@ The application uses a full-stack approach with a Python FastAPI backend handlin
 ## Live Demo
 
 - Backend API: https://intro-to-ai-travel-project-2.onrender.com/
-- Frontend Application: https://intro-to-ai-travel-project.vercel.app/
+- Frontend Application on Vercel: https://intro-to-ai-travel-project.vercel.app/
+- Frontend App on Netlify : https://discover-algiers.netlify.app/
 
 ---
 
