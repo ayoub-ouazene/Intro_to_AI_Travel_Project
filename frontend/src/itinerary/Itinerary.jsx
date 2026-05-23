@@ -48,7 +48,7 @@ export default function Itinerary({
 
         // 1. If we are viewing a historical itinerary (explicit ID)
         if (state.itineraryId) {
-          const res = await fetch(`http://localhost:8000/api/itineraries/${state.itineraryId}`, {
+          const res = await fetch(`https://intro-to-ai-travel-project-2.onrender.com/api/itineraries/${state.itineraryId}`, {
             headers: { "Authorization": `Bearer ${token}` }
           });
           if (res.ok) {
@@ -90,7 +90,7 @@ export default function Itinerary({
         }
         // 3. We didn't explicitly request one, so let's try to load the latest
         else if (token && !propLandmarkIDs?.length) {
-          const res = await fetch(`http://localhost:8000/api/itineraries/latest`, {
+          const res = await fetch(`https://intro-to-ai-travel-project-2.onrender.com/api/itineraries/latest`, {
             headers: { "Authorization": `Bearer ${token}` }
           });
           

@@ -671,7 +671,7 @@ export default function Profile() {
     if (!window.confirm("Are you sure you want to delete this itinerary?")) return;
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:8000/api/itineraries/${id}`, {
+      const res = await fetch(`https://intro-to-ai-travel-project-2.onrender.com/api/itineraries/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
